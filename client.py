@@ -87,7 +87,7 @@ Usage examples:
             if request is not None:#if well formed request
                #Send the request to the server and recevice the response
                self.socket.sendall(request)
-               response = self.socket.recv(1024)
+               response = self.socket.recv(self.BUFFER_SIZE)
             else:
                 response = 'Unkown command!' + self.help()
             sys.stdout.write(response + '\n')
