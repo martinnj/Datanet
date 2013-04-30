@@ -25,14 +25,20 @@ class Client:
         """
         #if ping command
         if command.upper().strip() == '/PING':
+            return "PING"
             pass
 
         #if calc command
         if command[0:6].upper() == '/CALC ':
+            args = command.split()
+            if args[1].isdigit() and args[3].isdigit():
+                if args[2] in "+-*/":
+                    return "CALC " + args[1] + " " + args[2] + " " + args[3]
             pass
 
         #if echo command
         if len(command) > 6 and command[:6].upper() == '/ECHO ':
+            return command[1:]
             pass
 
         #return None if the others fail => command not well formed
@@ -65,6 +71,8 @@ Usage examples:
         running = True
 
         #connect the client
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.connect((self.serverip,self.port))
 
         while running:
             # read from keyboard
@@ -78,15 +86,15 @@ Usage examples:
 
             if request is not None:#if well formed request
                #Send the request to the server and recevice the response
-
+               self.socket.sendall(request)
+               response = self.socket.recv(1024)
             else:
-               response = 'Unkown command!' + self.help()
+                response = 'Unkown command!' + self.help()
             sys.stdout.write(response + '\n')
 
 
         #close the socket
-
-
+        self.socket.close()
         print 'Connection closed. Bye!'
 
 
