@@ -30,10 +30,7 @@ class Client:
 
         #if calc command
         if command[0:6].upper() == '/CALC ':
-            args = command.split()
-            if args[1].isdigit() and args[3].isdigit():
-                if args[2] in "+-*/":
-                    return "CALC " + args[1] + " " + args[2] + " " + args[3]
+            return command[1:].upper()
             pass
 
         #if echo command
