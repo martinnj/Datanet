@@ -81,6 +81,7 @@ class Server:
             data = socket.recv(self.BUFFER_SIZE)
             if not data: break
             self.parse_command(data,socket)
+        socket.close()
 
 
     def run(self):
