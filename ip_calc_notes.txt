@@ -1,0 +1,30 @@
+
+Subnet Calculator Explanation
+
+This calculator will calculate the network address, the host address and the broadcast address for a given TCP/IP address and subnet mask.
+
+These are actually fairly straightforward calculations. The easiest way to do it is to depict both the ip address and the subnet mask in binary. Take 192.38.109.188 with subnet mask 255.255.192.0 listed in binary:
+
+          ip address: 11000000.00100110.01101101.10111100
+         subnet mask: 11111111.11111111.11000000.00000000
+If you do a binary AND between these two numbers, you get the network address:
+
+          ip address: 11000000.00100110.01101101.10111100
+         subnet mask: 11111111.11111111.11000000.00000000
+              -----------------------------------AND
+     network address: 11000000.00100110.01000000.00000000
+which translated back to dotted decimal notation is 192.38.64.0
+
+To get the host portion, invert the subnet mask and again perform a binary AND with the ip address:
+          ip address: 11000000.00100110.01101101.10111100
+inverted subnet mask: 00000000.00000000.00111111.11111111
+              -----------------------------------AND
+        host portion: 00000000.00000000.00101101.10111100
+which translated back to dotted decimal notation is 0.0.45.188
+
+To obtain the broadcast address, again it is simplest to look at it in binary. Take the inverted subnet mask and perform a binary XOR with the network address:
+     network address: 11000000.00100110.01000000.00000000
+inverted subnet mask: 00000000.00000000.00111111.11111111
+              -----------------------------------XOR
+   broadcast address: 11000000.00100110.01111111.11111111
+which translated back to dotted decimal notation is 192.38.127.255

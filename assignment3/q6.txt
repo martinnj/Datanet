@@ -1,0 +1,33 @@
+14:09:26.421237 IP localhost.localdomain.37301 > localhost.localdomain.hnmp: Flags [P.], seq 2047096018:2047096025, ack 2988268179, win 342, options [nop,nop,TS val 620654 ecr 592068], length 7
+	0x0000:  4500 003b 2c10 4000 4006 10ab 7f00 0001  E..;,.@.@.......
+	0x0010:  7f00 0001 91b5 1a86 7a04 34d2 b21d 5a93  ........z.4...Z.
+	0x0020:  8018 0156 fe2f 0000 0101 080a 0009 786e  ...V./........xn
+	0x0030:  0009 08c4 5061 6b6b 6520 31              ....Pakke.1
+14:09:26.431433 IP localhost.localdomain.hnmp > localhost.localdomain.37301: Flags [P.], seq 1:20, ack 7, win 342, options [nop,nop,TS val 620657 ecr 620654], length 19
+	0x0000:  4500 0047 42b3 4000 4006 f9fb 7f00 0001  E..GB.@.@.......
+	0x0010:  7f00 0001 1a86 91b5 b21d 5a93 7a04 34d9  ..........Z.z.4.
+	0x0020:  8018 0156 fe3b 0000 0101 080a 0009 7871  ...V.;........xq
+	0x0030:  0009 786e 6672 6f6d 5f73 6572 7665 723a  ..xnfrom_server:
+	0x0040:  5061 6b6b 6520 31                        Pakke.1
+14:09:26.431562 IP localhost.localdomain.37301 > localhost.localdomain.hnmp: Flags [.], ack 20, win 342, options [nop,nop,TS val 620657 ecr 620657], length 0
+	0x0000:  4500 0034 2c11 4000 4006 10b1 7f00 0001  E..4,.@.@.......
+	0x0010:  7f00 0001 91b5 1a86 7a04 34d9 b21d 5aa6  ........z.4...Z.
+	0x0020:  8010 0156 fe28 0000 0101 080a 0009 7871  ...V.(........xq
+	0x0030:  0009 7871                                ..xq
+14:09:28.946075 IP localhost.localdomain.37301 > localhost.localdomain.hnmp: Flags [P.], seq 7:14, ack 20, win 342, options [nop,nop,TS val 621411 ecr 620657], length 7
+	0x0000:  4500 003b 2c12 4000 4006 10a9 7f00 0001  E..;,.@.@.......
+	0x0010:  7f00 0001 91b5 1a86 7a04 34d9 b21d 5aa6  ........z.4...Z.
+	0x0020:  8018 0156 fe2f 0000 0101 080a 0009 7b63  ...V./........{c
+	0x0030:  0009 7871 5061 6c6c 6520 32              ..xqPalle.2
+14:09:28.955730 IP localhost.localdomain.hnmp > localhost.localdomain.37301: Flags [P.], seq 20:39, ack 14, win 342, options [nop,nop,TS val 621414 ecr 621411], length 19
+	0x0000:  4500 0047 42b4 4000 4006 f9fa 7f00 0001  E..GB.@.@.......
+	0x0010:  7f00 0001 1a86 91b5 b21d 5aa6 7a04 34e0  ..........Z.z.4.
+	0x0020:  8018 0156 fe3b 0000 0101 080a 0009 7b66  ...V.;........{f
+	0x0030:  0009 7b63 6672 6f6d 5f73 6572 7665 723a  ..{cfrom_server:
+	0x0040:  5061 6c6c 6520 32                        Palle.2
+14:09:28.955852 IP localhost.localdomain.37301 > localhost.localdomain.hnmp: Flags [.], ack 39, win 342, options [nop,nop,TS val 621414 ecr 621414], length 0
+	0x0000:  4500 0034 2c13 4000 4006 10af 7f00 0001  E..4,.@.@.......
+	0x0010:  7f00 0001 91b5 1a86 7a04 34e0 b21d 5ab9  ........z.4...Z.
+	0x0020:  8010 0156 fe28 0000 0101 080a 0009 7b66  ...V.(........{f
+	0x0030:  0009 7b66                                ..{f
+

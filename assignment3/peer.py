@@ -47,11 +47,14 @@ class ChatPeer:
             (rl, wl, el) = select.select(self.input_from,[],[])
             for inp in rl:
                 if inp == sys.stdin:
+                    #print "msg from stdin"
                     req = sys.stdin.readline()
                     self.parse_user_request(req)
                 elif inp == self.listener:
+                    #print "msg from listener"
                     self.connect_from_peer(inp)
                 else:
+                    #print "msg from peer"
                     self.handle_input(inp)
             pass
 
@@ -59,8 +62,16 @@ class ChatPeer:
         """
         Handle input coming from a peer socket
         """
-        req = "" + sock.recv(self.BUFFERSIZE)
-        self.parse_peer_request(self, req, sock)
+        req = sock.recv(self.BUFFERSIZE)
+        if req != "":
+            self.parse_peer_request(req, sock)
+        else:
+            nick = self.sock2nick[sock]
+            print nick + " disconnected"
+            del self.nick2info[nick]
+            del self.sock2nick[sock]
+            self.input_from.remove(sock)
+            sock = None
 
     def connect_to_ns(self, ns_ip, ns_port):
         """
@@ -74,7 +85,8 @@ class ChatPeer:
         listen_ip = 'localhost'
         # TODO: find a way to let socket choose the port.
         listen_port = int(ns_port) + random.randint(200,20000)
-        print "Will listen on: localhost:" + str(listen_port)
+        #this gives 19800 different ports,  should be enough for this assignment :)
+        #print "Will listen on: localhost:" + str(listen_port)
         self.ns_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.ns_socket.connect((ns_ip , int(ns_port)))
         self.listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -124,6 +136,9 @@ class ChatPeer:
 
         tokens = request.split()
 
+        if tokens[0] == "showme":
+            print self.nick2info
+            print self.sock2nick
         if tokens[0] == "/connect" and len(tokens) == 3:
             if self.nick == "":
                 print "Error: you need to chose a nick name before connecting"
@@ -148,6 +163,7 @@ class ChatPeer:
         elif tokens[0] == "/leave":
             if self.ns_socket:
                 self.disconnect_from_ns()
+                self.disconnect_from_peers()
                 print "Left Name Server"
             else:
                 print "Error: not connected"
@@ -156,10 +172,16 @@ class ChatPeer:
             print "Shutting down"
             sys.exit(0)
 
-        elif tokens[0] == "/lookup":
-            #For testing only, may not be directly callable.
-            ip = self.lookup_peer(tokens[1])
-            print "Lookup returned: " + str(ip)
+        #elif tokens[0] == "/lookup" and len(tokens) == 2:
+        #    #For testing only, may not be directly callable.
+        #    ip = self.lookup_peer(tokens[1])
+        #    print "Lookup returned: " + str(ip)
+
+        elif tokens[0] == "/msg":
+            self.send_message(tokens[1], " ".join(tokens[2:]))
+
+        elif tokens[0] == "/all":
+            self.broadcast(" ".join(tokens[1:]))
         else:
             print "Error: unknown message format"
 
@@ -178,6 +200,8 @@ class ChatPeer:
         data = self.ns_socket.recv(self.BUFFERSIZE)
         tokens = data.split()
         if tokens[0] == "200":
+            # add user to list before returning.
+            self.nick2info[user] = [None,tokens[2], tokens[3]]
             return tokens[2] + ":" + tokens[3]
         elif tokens[0] == "201":
             print "User " + user + " was not found."
@@ -199,11 +223,16 @@ class ChatPeer:
         print self.nick + " - You"
         if resp[:3] == "300":
             users = resp.split()[3:]
-            i = 0;
-            while i <= len(users)/3:
-                print users[i] + " - " + users[i+1] + ":" + users[i+2].replace(',','')
-                i = i + 3
             #print users
+            i = 0;
+            while i <= (len(users)/3)+1:
+                nick = users[i]
+                ip = users[i+1]
+                port = users[i+2].replace(',','')
+                print nick + " - " + ip + ":" + port
+                if self.nick2info.get(nick,None) == None:
+                    self.nick2info[nick] = [None,ip, port]
+                i = i + 3
         pass
 
 
@@ -225,6 +254,20 @@ class ChatPeer:
         # Here you should preform the connection to a new peer.
         # You should connect a new socket to the peer and preform the
         # peer-peer handshake.
+        info = user_addr.split(':')
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect((info[0] , int(info[1])))
+        sock.sendall("HELLO " + self.nick)
+        data = "" + sock.recv(self.BUFFERSIZE)
+        tokens = data.split()
+        if tokens[0] == "100":
+            self.nick2info[user_nick] = [sock,info[0],info[1]]
+            self.sock2nick[sock] = user_nick
+            self.input_from.append(sock)
+            #DEBUG INFO:
+            #print "Connected to peer."
+        else:
+            print "Could not connect to peer." + " ".join(tokens[0:])
         pass
 
 
@@ -236,6 +279,28 @@ class ChatPeer:
         # This method is basically the opposite of the above one.
         # Here you need to accept and incoming peer connection
         # and preform the receiver part of the peer-peer handshake.
+        csock , caddr = sock.accept()
+        request = csock.recv(self.BUFFERSIZE)
+        #print "new peer wrote: " + request
+        tokens = request.strip().split()
+        if tokens[0] == 'HELLO' and len(tokens) == 2:
+            #Do a check if name is in use
+            if self.nick2info.get(tokens[1],None) is not None:
+                csock.sendall("101 REFUSED")
+                csock.close
+                csock = None
+            else:
+                self.nick2info[tokens[1]] = [csock,caddr[0],caddr[1]]
+                self.sock2nick[csock] = tokens[1]
+                #self.logger.info("100 connected to " + addr[0] + ":" + str(addr[1]))
+                self.input_from.append(csock)
+                csock.sendall("100 CONNECTED")
+                #DEBUG:
+                #print "connection from new peer!"
+        else:
+            csock.sendall("102 HANDSHAKE EXPECTED")
+            csock.close
+            csock = None
         pass
 
 
@@ -247,14 +312,23 @@ class ChatPeer:
 
         if len(parts) > 0 and parts[0] == "MSG":
             # Do the appropriate actions according to the protocol.
-            pass
+            print "" + self.sock2nick[sock] + ": " + " ".join(parts[1:])
+            sock.sendall("200 MSG ACK")
         elif len(parts) > 0 and parts[0] == "LEAVE":
             # Do the appropriate actions according to the protocol.
-            pass
+            sock.sendall("400 BYE")
+            print "" + self.sock2nick[sock] + " left."
+            sock.close()
+            nick = self.sock2nick[sock]
+            del self.nick2info[nick]
+            del self.sock2nick[sock]
+            self.input_from.remove(sock)
+            sock = None
         else:
             print "Unrecognized command '%s' from peer %s ignored" % \
-                (data, self.socks2nicks[sock])
+                (request, self.sock2nick[sock])
             # Remember to send a response indicating bad formating
+            sock.sendall("500 BAD FORMAT")
 
 
     def disconnect_from_peers(self):
@@ -264,6 +338,20 @@ class ChatPeer:
         # Here you should close the connection to all peers
         # that are currently connected.
         # Remember to send the appropriate leave requests.
+        for nick in self.nick2info:
+            info = self.nick2info.get(nick,None)
+            if info is not None:
+                if info[0] is not None:
+                    sock = info[0]
+                    sock.sendall("LEAVE")
+                    sock.close()
+                    #nick = self.sock2nick[sock]
+                    #del self.nick2info[nick]
+                    #del self.sock2nick[sock]
+                    self.input_from.remove(sock)
+                    sock = None
+        self.nick2info = {}
+        self.sock2nick = {}
         pass
 
     def send_message(self, user, msg):
@@ -272,7 +360,35 @@ class ChatPeer:
         """
         # Here you should send a message to a connected peer.
         # Remember to check if you receive a message ack.
-        pass
+        info = self.nick2info.get(user,None)
+        sock = None
+        if info is not None:
+            if info[0] is not None:
+                #we got socket
+                sock = info[0]
+                #print "1: " + info[1]
+            else:
+                #got info, get socket
+                addr = "" + info[1] + ":" + info[2]
+                self.connect_to_peer(user,addr)
+                #print "2: " + info[1]
+                self.nick2info[user][0] = sock
+            pass
+        else:
+            #lookup from scratch
+            self.lookup_peer(user)
+            info = self.nick2info.get(user,None)
+            addr = "" + info[1] + ":" + info[2]
+            self.connect_to_peer(user,addr)
+            #print "3: " + info[1]
+            sock = self.nick2info[user][0]
+
+        # Ready to send message!
+        sock.settimeout(10.0) # give 10 seconds timeout on chat message
+        sock.sendall("MSG " + msg)
+        resp = sock.recv(self.BUFFERSIZE)
+        if resp is None or resp.split()[0] != "200":
+            print "Message was not delivered to " + user + "!"
 
     def broadcast(self, msg):
         """
@@ -283,7 +399,20 @@ class ChatPeer:
         # connection to all peers on the system.
         # When these connections are obtained, you should send the message
         # to every peer like you would send a regular message.
-        pass
+        self.ns_socket.sendall("USERLIST")
+        data = self.ns_socket.recv(self.BUFFERSIZE)
+        resp = str(data)
+        if resp[:3] == "300":
+            users = resp.split()[3:]
+            i = 0;
+            while i <= (len(users)/3)+1:
+                nick = users[i]
+                ip = users[i+1]
+                port = users[i+2].replace(',','')
+                self.connect_to_peer(nick, ip + ":" + port)
+                i = i + 3
+        for nick in self.nick2info:
+            self.send_message(nick, msg)
 
 
 # Run the server.

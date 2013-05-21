@@ -16,7 +16,7 @@ other kinds of messages should go to the server
 
 if __name__=='__main__':
   host = 'localhost'
-  port = 6789
+  port = 6790
   size = 1024
   s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   s.connect((host,port))
